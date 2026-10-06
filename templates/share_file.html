@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% from "base.html" import icon with context %}
+{% block title %}Share File — SecureShare{% endblock %}
+{% block page_title %}Share{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h2>Share "{{ file.original_filename }}"</h2>
+        <p>Grant access to another registered user, or generate a public link.</p>
+    </div>
+</div>
+
+<div class="settings-grid">
+    <div class="card">
+        <h3 style="margin-top:0;">Grant access to a user</h3>
+        <form method="POST" action="{{ url_for('share_file', file_id=file.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <label for="recipient_id">Share with</label>
+            <select id="recipient_id" name="recipient_id" required>
+                <option value="">Select a user…</option>
+                {% for u in users %}
+                    <option value="{{ u.id }}">{{ u.username }} ({{ u.email }})</option>
+                {% endfor %}
+            </select>
+
+            <label>Permission</label>
+            <div class="radio-row">
+                <label><input type="radio" name="permission" value="download" checked> Download</label>
+                <label><input type="radio" name="permission" value="view"> View only</label>
+            </div>
+
+            <div class="field-row">
+                <div>
+                    <label for="expires_days">Expires in (days)</label>
+                    <input type="number" id="expires_days" name="expires_days" min="1" placeholder="Never">
+                </div>
+                <div>
+                    <label for="max_downloads">Max downloads</label>
+                    <input type="number" id="max_downloads" name="max_downloads" min="1" placeholder="Unlimited">
+                </div>
+            </div>
+
+            <label for="owner_password">Your password (authorizes the key exchange)</label>
+            <input type="password" id="owner_password" name="owner_password" required autocomplete="current-password">
+
+            <button type="submit" class="btn btn-primary btn-block" style="margin-top:18px;">{{ icon('users', 16) }} Share file</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h3 style="margin-top:0;">Create a public link</h3>
+        <p class="form-help" style="margin-bottom:14px;">Anyone with the link — and password, if you set one — can download the file without an account. The link's own token is part of the encryption key, so possessing the URL is what grants access.</p>
+        <form method="POST" action="{{ url_for('create_share_link', file_id=file.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <label for="label">Label (optional)</label>
+            <input type="text" id="label" name="label" placeholder="e.g. for the design team">
+
+            <label for="link_password">Password (optional)</label>
+            <input type="password" id="link_password" name="link_password" autocomplete="new-password">
+
+            <div class="field-row">
+                <div>
+                    <label for="link_expires_days">Expires in (days)</label>
+                    <input type="number" id="link_expires_days" name="link_expires_days" min="1" placeholder="7 (default)">
+                </div>
+                <div>
+                    <label for="link_max_downloads">Max downloads</label>
+                    <input type="number" id="link_max_downloads" name="link_max_downloads" min="1" placeholder="Unlimited">
+                </div>
+            </div>
+
+            <label for="link_owner_password">Your password (authorizes the key exchange)</label>
+            <input type="password" id="link_owner_password" name="owner_password" required autocomplete="current-password">
+
+            <button type="submit" class="btn btn-secondary btn-block" style="margin-top:18px;">{{ icon('link', 16) }} Create public link</button>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <h3 style="margin-top:0;">Current access</h3>
+    {% set active_perms = file.permissions | rejectattr('user_id', 'equalto', file.owner_id) | list %}
+    {% if active_perms %}
+    <div class="table-wrap" style="border:none;">
+        <table class="log-table">
+            <thead><tr><th>User</th><th>Permission</th><th>Downloads</th><th></th></tr></thead>
+            <tbody>
+            {% for p in active_perms %}
+                <tr>
+                    <td>{{ p.user.username }}</td>
+                    <td><span class="badge">{{ p.permission }}</span>{% if p.is_expired() %} <span class="badge badge-expired">expired</span>{% endif %}</td>
+                    <td>{{ p.download_count }}{% if p.max_downloads %} / {{ p.max_downloads }}{% endif %}</td>
+                    <td>
+                        <form method="POST" action="{{ url_for('revoke', file_id=file.id, user_id=p.user_id) }}" data-confirm="Revoke access for {{ p.user.username }}?">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn-sm btn-danger">{{ icon('x', 13) }} Revoke</button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="empty-state">Not shared with anyone yet.</p>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h3 style="margin-top:0;">Public links</h3>
+    {% if links %}
+    <div class="table-wrap" style="border:none;">
+        <table class="log-table">
+            <thead><tr><th>Label</th><th>Link</th><th>Status</th><th>Downloads</th><th>Expires</th><th></th></tr></thead>
+            <tbody>
+            {% for l in links %}
+                <tr>
+                    <td>{{ l.label or '—' }}</td>
+                    <td>
+                        <div class="copy-field">
+                            <input type="text" readonly value="{{ url_for('public_link', token=l.token, _external=True) }}" id="link-input-{{ l.id }}" style="max-width:220px;">
+                            <button type="button" class="btn-sm" data-copy-target="#link-input-{{ l.id }}">Copy</button>
+                        </div>
+                    </td>
+                    <td>{% if l.is_expired() %}<span class="badge badge-expired">{{ 'revoked' if l.revoked else 'expired' }}</span>{% else %}<span class="badge badge-verified">active</span>{% endif %}{% if l.password_hash %} <span class="badge">{{ icon('lock', 11) }}</span>{% endif %}</td>
+                    <td>{{ l.download_count }}{% if l.max_downloads %} / {{ l.max_downloads }}{% endif %}</td>
+                    <td>{{ l.expires_at.strftime('%b %d, %Y') if l.expires_at else 'Never' }}</td>
+                    <td>
+                        {% if not l.is_expired() %}
+                        <form method="POST" action="{{ url_for('revoke_share_link', file_id=file.id, link_id=l.id) }}" data-confirm="Revoke this link?">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn-sm btn-danger">Revoke</button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="empty-state">No public links created yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

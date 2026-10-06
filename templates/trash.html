@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% from "base.html" import icon with context %}
+{% block title %}Trash — SecureShare{% endblock %}
+{% block page_title %}Trash{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h2>Trash</h2>
+        <p>Files stay here for {{ retention_days }} days, then are purged automatically.</p>
+    </div>
+</div>
+
+{% if files %}
+<div class="table-wrap">
+    <table class="log-table">
+        <thead><tr><th>Filename</th><th>Size</th><th>Trashed</th><th>Purges in</th><th></th></tr></thead>
+        <tbody>
+        {% for f in files %}
+            <tr>
+                <td>
+                    <div class="filename-cell">
+                        <span class="file-icon">🗑️</span>
+                        <span>{{ f.original_filename }}</span>
+                    </div>
+                </td>
+                <td>{{ f.human_size() }}</td>
+                <td>{{ f.trashed_at.strftime('%b %d, %Y') if f.trashed_at else '—' }}</td>
+                <td>{{ retention_days - f.days_in_trash() }} day{{ '' if (retention_days - f.days_in_trash()) == 1 else 's' }}</td>
+                <td class="actions">
+                    <form method="POST" action="{{ url_for('restore_file', file_id=f.id) }}" style="display:inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn-sm">{{ icon('check', 14) }} Restore</button>
+                    </form>
+                    <form method="POST" action="{{ url_for('delete_forever', file_id=f.id) }}" data-confirm="Permanently delete &quot;{{ f.original_filename }}&quot;? This cannot be undone." style="display:inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn-sm btn-danger">{{ icon('x', 14) }} Delete forever</button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="empty-state">
+    <div class="empty-icon">{{ icon('trash', 34) }}</div>
+    <p>Trash is empty.</p>
+</div>
+{% endif %}
+{% endblock %}

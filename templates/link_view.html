@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% from "base.html" import icon with context %}
+{% block title %}Shared file — SecureShare{% endblock %}
+{% block content %}
+<div class="link-view-shell card">
+    {% if expired %}
+        <div style="text-align:center; padding: 10px 0;">
+            <div class="empty-icon" style="margin-bottom:14px;">{{ icon('x', 34) }}</div>
+            <h2>This link is no longer available</h2>
+            <p style="color: var(--text-dim);">It may have expired, hit its download limit, or been revoked by its owner.</p>
+        </div>
+    {% else %}
+        <div style="text-align:center; margin-bottom: 18px;">
+            <div class="empty-icon" style="color: var(--accent);">{{ icon('lock', 34) }}</div>
+            <h2 style="margin-bottom:4px;">{{ link.file.original_filename }}</h2>
+            <p style="color: var(--text-dim); margin:0;">{{ link.file.human_size() }} · shared by {{ link.creator.username }}</p>
+        </div>
+        {% if error %}
+            <div class="flash flash-danger" style="position:static; margin-bottom:14px;">{{ error }}</div>
+        {% endif %}
+        <form method="POST" action="{{ url_for('public_link', token=link.token) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            {% if link.requires_password() %}
+            <label for="password">This link is password-protected</label>
+            <input type="password" id="password" name="password" required autofocus>
+            {% endif %}
+            <button type="submit" class="btn btn-primary btn-block" style="margin-top:18px;">{{ icon('download', 16) }} Decrypt &amp; download</button>
+        </form>
+        <p class="form-help" style="text-align:center; margin-top:16px;">Encrypted end-to-end. The key needed to decrypt this file lives only in this link — SecureShare's server never stores it in a recoverable form.</p>
+    {% endif %}
+</div>
+{% endblock %}

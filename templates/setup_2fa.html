@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Set up 2FA — SecureShare{% endblock %}
+{% block page_title %}Set up two-factor authentication{% endblock %}
+{% block content %}
+
+<div class="form-card card">
+    <h2>Set up two-factor authentication</h2>
+    <p class="form-note">Add this account to your authenticator app (Google Authenticator, Authy, 1Password, etc.) using the key below, then enter the 6-digit code it generates.</p>
+
+    <div class="qr-manual">
+        <div class="form-help">Manual entry key</div>
+        <div class="secret mono">{{ secret }}</div>
+    </div>
+    <p class="form-help" style="margin-bottom:16px; word-break: break-all;">Provisioning URI: <span class="mono">{{ uri }}</span></p>
+
+    <form method="POST" action="{{ url_for('setup_2fa') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label for="code">Enter the 6-digit code</label>
+        <input type="text" id="code" name="code" inputmode="numeric" maxlength="6" required autofocus placeholder="123456">
+        <button type="submit" class="btn btn-primary btn-block" style="margin-top:18px;">Verify &amp; enable</button>
+    </form>
+    <p class="form-footer"><a href="{{ url_for('settings') }}">Cancel</a></p>
+</div>
+{% endblock %}

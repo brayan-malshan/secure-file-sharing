@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% from "base.html" import icon with context %}
+{% block title %}Audit Logs — SecureShare{% endblock %}
+{% block page_title %}Audit Logs{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h2>Audit Logs</h2>
+        <p>Actions you performed, and activity on files you own. {{ total }} entr{{ 'y' if total == 1 else 'ies' }}.</p>
+    </div>
+    <a href="{{ url_for('export_audit_logs') }}" class="btn btn-secondary">{{ icon('download', 16) }} Export CSV</a>
+</div>
+
+<form method="GET" action="{{ url_for('audit_logs') }}" class="searchbar">
+    <select name="action" onchange="this.form.submit()">
+        <option value="">All actions</option>
+        {% for a in all_actions %}
+            <option value="{{ a }}" {{ 'selected' if action_filter == a }}>{{ a.replace('_', ' ') }}</option>
+        {% endfor %}
+    </select>
+    {% if action_filter %}<a href="{{ url_for('audit_logs') }}" class="btn-link">Clear filter</a>{% endif %}
+</form>
+
+{% if logs %}
+<div class="table-wrap">
+    <table class="log-table">
+        <thead><tr><th>User</th><th>Action</th><th>File</th><th>IP</th><th>Detail</th><th>Time</th></tr></thead>
+        <tbody>
+        {% for log in logs %}
+            <tr class="{{ 'row-alert' if 'unauthorized' in log.action or 'integrity' in log.action else '' }}">
+                <td>{{ log.username or '—' }}</td>
+                <td><span class="badge badge-{{ log.action }}">{{ log.action.replace('_', ' ') }}</span></td>
+                <td>{{ log.filename or '—' }}</td>
+                <td class="mono">{{ log.ip_address or '—' }}</td>
+                <td>{{ log.detail or '—' }}</td>
+                <td>{{ log.timestamp.strftime('%b %d, %Y %H:%M:%S') }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% set extra_args = {'action': action_filter} %}
+{% include '_pagination.html' %}
+{% else %}
+<div class="empty-state">
+    <div class="empty-icon">{{ icon('list', 34) }}</div>
+    <p>No log entries yet.</p>
+</div>
+{% endif %}
+{% endblock %}

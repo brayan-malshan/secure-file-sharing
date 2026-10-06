@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% from "base.html" import icon with context %}
+{% block title %}Notifications — SecureShare{% endblock %}
+{% block page_title %}Notifications{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h2>Notifications</h2>
+        <p>Recent activity involving your account and files.</p>
+    </div>
+</div>
+
+{% if items %}
+<div class="card" style="padding:0;">
+    {% for n in items %}
+        <a href="{{ n.link or '#' }}" class="notif-item" style="padding:16px 20px; {{ 'opacity:0.6;' if n.is_read else '' }}">
+            <strong style="color: var(--{{ n.category if n.category in ['danger','warning'] else 'text' }});">{{ n.message }}</strong>
+            <span class="n-time">{{ n.created_at.strftime('%b %d, %Y at %H:%M') }}</span>
+        </a>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <div class="empty-icon">{{ icon('bell', 34) }}</div>
+    <p>No notifications yet.</p>
+</div>
+{% endif %}
+{% endblock %}

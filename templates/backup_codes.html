@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Backup Codes — SecureShare{% endblock %}
+{% block page_title %}Backup codes{% endblock %}
+{% block content %}
+
+<div class="form-card card">
+    <h2>Save your backup codes</h2>
+    <p class="form-note">Each code can be used once to log in if you lose access to your authenticator app. Store them somewhere safe — they won't be shown again.</p>
+
+    <div class="backup-codes-grid">
+        {% for code in codes %}
+            <div>{{ code }}</div>
+        {% endfor %}
+    </div>
+
+    <a href="{{ url_for('settings') }}" class="btn btn-primary btn-block">I've saved these — continue</a>
+</div>
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% from "base.html" import icon with context %}
+{% block title %}SecureShare — Encrypted File Sharing{% endblock %}
+{% block content %}
+<div class="hero">
+    <h1>Share files the way they should always have been shared.</h1>
+    <p class="subtitle">Hybrid RSA-3072 + AES-256-GCM encryption, per-recipient key wrapping, capability-URL public links, and a full audit trail — built as a portfolio project to demonstrate real end-to-end security patterns.</p>
+    <div class="hero-actions">
+        <a href="{{ url_for('register') }}" class="btn btn-primary">Get Started — it's free</a>
+        <a href="{{ url_for('login') }}" class="btn btn-secondary">Login</a>
+    </div>
+</div>
+
+<div class="feature-grid">
+    <div class="feature-card">
+        <div class="f-icon">{{ icon('lock') }}</div>
+        <h3>Hybrid encryption</h3>
+        <p>Every file gets a unique, single-use AES-256 key. That key is wrapped per-recipient with RSA-OAEP — the server never sees it in the clear.</p>
+    </div>
+    <div class="feature-card">
+        <div class="f-icon">{{ icon('shield') }}</div>
+        <h3>Tamper detection</h3>
+        <p>AES-GCM authenticated encryption plus a SHA-256 integrity check on every download means silent corruption or tampering gets caught, not served.</p>
+    </div>
+    <div class="feature-card">
+        <div class="f-icon">{{ icon('link') }}</div>
+        <h3>Capability share links</h3>
+        <p>Send a file to someone without an account. The link's own token doubles as key material — nobody but the holder of the URL can decrypt it.</p>
+    </div>
+    <div class="feature-card">
+        <div class="f-icon">{{ icon('users') }}</div>
+        <h3>Fine-grained access</h3>
+        <p>Expiring grants, download caps, one-click revocation, and optional passwords on public links.</p>
+    </div>
+    <div class="feature-card">
+        <div class="f-icon">{{ icon('bell') }}</div>
+        <h3>Two-factor authentication</h3>
+        <p>Optional TOTP with backup codes, on top of scrypt-hashed passwords and lockout after repeated failures.</p>
+    </div>
+    <div class="feature-card">
+        <div class="f-icon">{{ icon('list') }}</div>
+        <h3>Full audit trail</h3>
+        <p>Every login, share, download, revoke, and unauthorized attempt is logged — filterable, paginated, and exportable to CSV.</p>
+    </div>
+</div>
+{% endblock %}

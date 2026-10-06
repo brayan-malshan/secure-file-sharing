@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Login — SecureShare{% endblock %}
+{% block content %}
+<div class="form-card card">
+    <h2>Welcome back</h2>
+    <form method="POST" action="{{ url_for('login') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" required autocomplete="username" autofocus>
+
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required autocomplete="current-password">
+
+        <button type="submit" class="btn btn-primary btn-block" style="margin-top:22px;">Log in</button>
+    </form>
+    
+    <p class="form-footer"><a href="{{ url_for('forgot_password') }}">Forgot password?</a></p>
+
+    <p class="form-footer">Don't have an account? <a href="{{ url_for('register') }}">Create one</a></p>
+</div>
+{% endblock %}

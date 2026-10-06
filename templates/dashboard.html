@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% from "base.html" import icon with context %}
+{% block title %}Dashboard — SecureShare{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h2>Welcome back, {{ current_user.username }}</h2>
+        <p>Here's what's happening across your encrypted files.</p>
+    </div>
+    <a href="{{ url_for('upload') }}" class="btn btn-primary">{{ icon('upload', 16) }} Upload a file</a>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon" style="background: var(--teal-dim); color: var(--teal);">{{ icon('folder', 18) }}</div>
+        <span class="stat-number">{{ my_files|length }}</span>
+        <span class="stat-label">Secure files</span>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background: var(--info-dim); color: var(--info);">{{ icon('users', 18) }}</div>
+        <span class="stat-number">{{ shared_with_me|length }}</span>
+        <span class="stat-label">Shared with me</span>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(232,163,61,0.14); color: var(--accent);">{{ icon('download', 18) }}</div>
+        <span class="stat-number">{{ total_downloads }}</span>
+        <span class="stat-label">Downloads by you</span>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background: var(--danger-dim); color: var(--danger);">{{ icon('link', 18) }}</div>
+        <span class="stat-number">{{ active_links }}</span>
+        <span class="stat-label">Active public links</span>
+    </div>
+</div>
+
+<div class="dashboard-grid">
+    <div>
+        <div class="card">
+            <div class="card-title-row"><h3>Recent security activity</h3><a href="{{ url_for('audit_logs') }}" class="btn-link" style="font-size:0.8rem;">Full log →</a></div>
+            {% if recent_activity %}
+            <div class="table-wrap" style="border:none;">
+                <table class="log-table">
+                    <thead><tr><th>Action</th><th>File</th><th>Time</th></tr></thead>
+                    <tbody>
+                    {% for log in recent_activity %}
+                        <tr class="{{ 'row-alert' if 'unauthorized' in log.action or 'integrity' in log.action else '' }}">
+                            <td><span class="badge badge-{{ log.action }}">{{ log.action.replace('_', ' ') }}</span></td>
+                            <td>{{ log.filename or '—' }}</td>
+                            <td>{{ log.timestamp.strftime('%b %d, %H:%M') }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="empty-state">No activity yet. <a href="{{ url_for('upload') }}">Upload your first file</a>.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div>
+        <div class="card">
+            <h3 style="margin-top:0;">Storage</h3>
+            <div class="quota-summary" style="margin-bottom:16px;">
+                <div class="qs-bar">
+                    <div class="quota-label"><span>{{ (current_user.storage_used() / (1024*1024)) | round(1) }} MB used</span><span>{{ (current_user.storage_quota / (1024*1024)) | round(0) | int }} MB quota</span></div>
+                    <div class="quota-bar"><div class="quota-bar-fill" style="width: {{ current_user.storage_percent() }}%;"></div></div>
+                </div>
+            </div>
+            {% if breakdown %}
+            <div class="bar-list">
+                {% set max_val = breakdown.values() | list | max %}
+                {% for ext, size in breakdown.items() %}
+                <div class="bar-row">
+                    <span class="mono">.{{ ext }}</span>
+                    <div class="bar-track"><div class="bar-fill" style="width: {{ (size / max_val * 100) | round(0) }}%;"></div></div>
+                    <span style="text-align:right; color: var(--text-faint);">{{ (size/1024)|round(0)|int }} KB</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="empty-state" style="padding:24px;">No files yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

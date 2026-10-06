@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% from "base.html" import icon with context %}
+{% block title %}Upload — SecureShare{% endblock %}
+{% block page_title %}Upload{% endblock %}
+{% block content %}
+
+<div class="form-card card">
+    <h2>Upload &amp; encrypt a file</h2>
+    <p class="form-note">Your file is encrypted with a fresh, single-use AES-256 key before it ever touches disk. Max size 25 GB.</p>
+
+    <form method="POST" action="{{ url_for('upload') }}" enctype="multipart/form-data" id="uploadForm" data-max-bytes="26214400">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="dropzone" id="dropzone">
+            <div class="dz-icon">{{ icon('upload', 30) }}</div>
+            <div class="dz-title">Drag &amp; drop a file here</div>
+            <div class="dz-sub">or click to browse — PDF, images, docs, spreadsheets, zip, txt, md, json, csv</div>
+            <input type="file" id="file" name="file" required>
+        </div>
+
+        <div class="file-preview" id="filePreview">
+            <div class="fp-icon">📁</div>
+            <div class="fp-info">
+                <div class="fp-name"></div>
+                <div class="fp-size"></div>
+            </div>
+        </div>
+
+        <div class="progress-bar" id="uploadProgress"><div class="progress-bar-fill"></div></div>
+
+        <button type="submit" class="btn btn-primary btn-block" id="uploadSubmit" style="margin-top:18px;">{{ icon('lock', 16) }} Encrypt &amp; upload</button>
+    </form>
+</div>
+{% endblock %}

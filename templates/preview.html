@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% from "base.html" import icon with context %}
+{% block title %}Preview — SecureShare{% endblock %}
+{% block page_title %}Preview{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h2>{{ file.original_filename }}</h2>
+        <p>Decrypted in memory for preview only — nothing was written to disk unencrypted.</p>
+    </div>
+    <a href="{{ url_for('download', file_id=file.id) }}" class="btn btn-primary">{{ icon('download', 16) }} Download instead</a>
+</div>
+
+<div class="preview-wrap">
+    {% if kind == 'text' %}
+        <pre>{{ text }}</pre>
+        {% if truncated %}<p class="form-help" style="padding: 0 18px 14px;">Preview truncated — download the file to see the rest.</p>{% endif %}
+    {% elif kind == 'image' %}
+        <img src="{{ data_uri }}" alt="{{ file.original_filename }}">
+    {% endif %}
+</div>
+{% endblock %}

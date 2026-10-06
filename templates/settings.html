@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% from "base.html" import icon with context %}
+{% block title %}Settings — SecureShare{% endblock %}
+{% block page_title %}Settings{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h2>Settings</h2>
+        <p>Manage your account, security, and storage.</p>
+    </div>
+</div>
+
+<div class="settings-grid">
+    <div>
+        <div class="card">
+            <h3 style="margin-top:0;">Profile</h3>
+            <div class="user-chip" style="padding:0; margin-bottom:14px;">
+                <span class="avatar" style="width:44px;height:44px;font-size:0.95rem; background: {{ current_user.avatar_color }};">{{ current_user.initials() }}</span>
+                <span>
+                    <span class="u-name" style="display:block; font-size:1rem;">{{ current_user.username }}</span>
+                    <span class="u-sub">{{ current_user.email }}</span>
+                </span>
+            </div>
+            <p class="form-help">Member since {{ current_user.created_at.strftime('%B %Y') if current_user.created_at else '—' }}</p>
+            <p class="form-help" style="margin-top:8px;">
+                Email:
+                {% if current_user.email_verified %}
+                    <span class="badge badge-verified">{{ icon('check', 11) }} Verified</span>
+                {% else %}
+                    <span class="badge">Not verified</span>
+                    <form method="POST" action="{{ url_for('resend_verification') }}" style="display:inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn-link" style="font-size:0.85em;">Resend verification email</button>
+                    </form>
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="card">
+            <h3 style="margin-top:0;">Storage</h3>
+            <div class="quota-label"><span>{{ (current_user.storage_used() / (1024*1024)) | round(1) }} MB used</span><span>{{ (current_user.storage_quota / (1024*1024)) | round(0) | int }} MB quota</span></div>
+            <div class="quota-bar" style="margin-top:6px;"><div class="quota-bar-fill" style="width: {{ current_user.storage_percent() }}%;"></div></div>
+        </div>
+
+        <div class="card">
+            <h3 style="margin-top:0;">Appearance</h3>
+            <div class="toggle-row">
+                <div>
+                    <div style="font-weight:600; font-size:0.9rem;">Dark mode</div>
+                    <div class="form-help" style="margin-top:2px;">Switch between light and dark themes.</div>
+                </div>
+                <form method="POST" action="{{ url_for('set_theme') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="theme" value="{{ 'light' if current_theme == 'dark' else 'dark' }}">
+                    <label class="switch">
+                        <input type="checkbox" onchange="this.form.submit()" {{ 'checked' if current_theme == 'dark' }}>
+                        <span class="slider"></span>
+                    </label>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div>
+        <div class="card">
+            <div class="card-title-row">
+                <h3>Two-factor authentication</h3>
+                {% if current_user.totp_enabled %}<span class="badge badge-verified">{{ icon('check', 11) }} Enabled</span>{% else %}<span class="badge">Disabled</span>{% endif %}
+            </div>
+            <p class="form-help" style="margin-bottom:14px;">Require a 6-digit code from an authenticator app in addition to your password.</p>
+
+            {% if current_user.totp_enabled %}
+                <p class="form-help">{{ current_user.remaining_backup_codes() }} backup codes remaining.</p>
+                <form method="POST" action="{{ url_for('regenerate_backup_codes') }}" style="margin-bottom:10px;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <label for="regen_pw">Password</label>
+                    <input type="password" id="regen_pw" name="password" required>
+                    <button type="submit" class="btn btn-secondary btn-block" style="margin-top:10px;">Regenerate backup codes</button>
+                </form>
+                <form method="POST" action="{{ url_for('disable_2fa') }}" data-confirm="Disable two-factor authentication?">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <label for="disable_pw">Password</label>
+                    <input type="password" id="disable_pw" name="password" required>
+                    <button type="submit" class="btn btn-danger btn-block" style="margin-top:10px;">Disable 2FA</button>
+                </form>
+            {% else %}
+                <a href="{{ url_for('setup_2fa') }}" class="btn btn-primary btn-block">{{ icon('lock', 16) }} Set up two-factor authentication</a>
+            {% endif %}
+        </div>
+
+        <div class="card">
+            <h3 style="margin-top:0;">Account recovery</h3>
+            <p class="form-help" style="margin-bottom:14px;">
+                Generating a new recovery code immediately invalidates your old one.
+                Store the new code somewhere safe — it's shown only once.
+            </p>
+            <form method="POST" action="{{ url_for('regenerate_recovery_code') }}" data-confirm="Generate a new recovery code? Your old one will stop working immediately.">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <label for="recovery_pw">Password</label>
+                <input type="password" id="recovery_pw" name="password" required>
+                <button type="submit" class="btn btn-secondary btn-block" style="margin-top:10px;">Generate new recovery code</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h3 style="margin-top:0;">Cryptographic identity</h3>
+            <p class="form-help" style="margin-bottom:10px;">Your public key (safe to share — this is what others use to encrypt data for you).</p>
+            <div class="code-block" style="max-height:140px; overflow-y:auto;">{{ current_user.public_key }}</div>
+        </div>
+    </div>
+</div>
+{% endblock %}

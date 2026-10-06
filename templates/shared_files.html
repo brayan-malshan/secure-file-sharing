@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% from "base.html" import icon with context %}
+{% block title %}Shared With Me — SecureShare{% endblock %}
+{% block page_title %}Shared With Me{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h2>Shared With Me</h2>
+        <p>{{ total }} file{{ '' if total == 1 else 's' }} other people have shared with you.</p>
+    </div>
+</div>
+
+<form method="GET" action="{{ url_for('shared_files') }}" class="searchbar">
+    <input type="text" name="q" value="{{ q }}" placeholder="Search filename…">
+    <button type="submit" class="btn btn-secondary">Search</button>
+    {% if q %}<a href="{{ url_for('shared_files') }}" class="btn-link">Clear</a>{% endif %}
+</form>
+
+{% if perms %}
+<div class="table-wrap">
+    <table class="log-table">
+        <thead><tr><th>Filename</th><th>Owner</th><th>Permission</th><th>Expires</th><th>Downloads</th><th></th></tr></thead>
+        <tbody>
+        {% for p in perms %}
+            <tr>
+                <td>
+                    <div class="filename-cell">
+                        <span class="file-icon">📄</span>
+                        <span>{{ p.file.original_filename }}</span>
+                    </div>
+                </td>
+                <td>{{ p.file.owner.username }}</td>
+                <td><span class="badge">{{ p.permission }}</span></td>
+                <td>{{ p.expires_at.strftime('%b %d, %Y') if p.expires_at else 'Never' }}</td>
+                <td>{{ p.download_count }}{% if p.max_downloads %} / {{ p.max_downloads }}{% endif %}</td>
+                <td class="actions">
+                    {% if p.is_expired() %}
+                        <span class="badge badge-expired">Expired</span>
+                    {% else %}
+                        <a href="{{ url_for('download', file_id=p.file.id) }}" class="btn-sm">{{ icon('download', 14) }} Download</a>
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% set extra_args = {'q': q} %}
+{% include '_pagination.html' %}
+{% else %}
+<div class="empty-state">
+    <div class="empty-icon">{{ icon('users', 34) }}</div>
+    <p>No files have been shared with you yet.</p>
+</div>
+{% endif %}
+{% endblock %}

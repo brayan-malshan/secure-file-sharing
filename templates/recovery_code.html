@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Recovery Code — SecureShare{% endblock %}
+{% block page_title %}Account recovery code{% endblock %}
+{% block content %}
+
+<div class="form-card card">
+    <h2>Save your recovery code</h2>
+    <p class="form-note">
+        This is the <strong>only</strong> way to reset your password if you forget it.
+        It will not be shown again after you leave this page. Store it somewhere safe —
+        a password manager, printed and locked away, etc.
+    </p>
+
+    <div class="backup-codes-grid">
+        <div style="font-size:1.1em; letter-spacing:1px;">{{ code }}</div>
+    </div>
+
+    <p class="form-note">
+        Anyone with this code and your email address can reset your account's password,
+        so treat it like a password itself.
+    </p>
+
+    <a href="{{ url_for('login') }}" class="btn btn-primary btn-block">I've saved it — continue to login</a>
+</div>
+{% endblock %}

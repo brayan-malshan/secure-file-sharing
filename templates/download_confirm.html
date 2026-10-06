@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% from "base.html" import icon with context %}
+{% block title %}Download — SecureShare{% endblock %}
+{% block page_title %}Decrypt{% endblock %}
+{% block content %}
+<div class="form-card card">
+    <h2>Decrypt &amp; access</h2>
+    <p class="form-note">"{{ file.original_filename }}" ({{ file.human_size() }}) is stored encrypted. Re-enter your password to unlock your private key.</p>
+    <form method="POST" action="{{ url_for('download', file_id=file.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label for="password">Your password</label>
+        <input type="password" id="password" name="password" required autocomplete="current-password" autofocus>
+
+        {% set ext = file.extension() %}
+        {% set can_preview = ext in ['txt','md','csv','json','png','jpg','jpeg','gif'] %}
+        <div style="display:flex; gap:10px; margin-top:20px;">
+            {% if can_preview %}
+            <button type="submit" name="mode" value="preview" class="btn btn-secondary" style="flex:1;">{{ icon('eye', 16) }} Preview</button>
+            {% endif %}
+            <button type="submit" name="mode" value="download" class="btn btn-primary" style="flex:1;">{{ icon('download', 16) }} Decrypt &amp; download</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

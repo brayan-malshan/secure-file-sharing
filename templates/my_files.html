@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% from "base.html" import icon with context %}
+{% block title %}My Files — SecureShare{% endblock %}
+{% block page_title %}My Files{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h2>My Files</h2>
+        <p>{{ total }} file{{ '' if total == 1 else 's' }} encrypted and stored.</p>
+    </div>
+    <a href="{{ url_for('upload') }}" class="btn btn-primary">{{ icon('upload', 16) }} Upload</a>
+</div>
+
+<form method="GET" action="{{ url_for('my_files') }}" class="searchbar">
+    <input type="text" name="q" value="{{ q }}" placeholder="Search filename…">
+    <select name="sort" onchange="this.form.submit()">
+        <option value="newest" {{ 'selected' if sort == 'newest' }}>Newest first</option>
+        <option value="oldest" {{ 'selected' if sort == 'oldest' }}>Oldest first</option>
+        <option value="name" {{ 'selected' if sort == 'name' }}>Name (A–Z)</option>
+        <option value="largest" {{ 'selected' if sort == 'largest' }}>Largest first</option>
+    </select>
+    <button type="submit" class="btn btn-secondary">Search</button>
+    {% if q %}<a href="{{ url_for('my_files') }}" class="btn-link">Clear</a>{% endif %}
+</form>
+
+{% if files %}
+<div class="table-wrap">
+    <table class="log-table">
+        <thead><tr><th>Filename</th><th>Size</th><th>Uploaded</th><th>SHA-256</th><th>Downloads</th><th></th></tr></thead>
+        <tbody>
+        {% for f in files %}
+            <tr>
+                <td>
+                    <div class="filename-cell">
+                        <span class="file-icon">📄</span>
+                        <span>{{ f.original_filename }}</span>
+                    </div>
+                </td>
+                <td>{{ f.human_size() }}</td>
+                <td>{{ f.created_at.strftime('%b %d, %Y %H:%M') }}</td>
+                <td class="hash">{{ f.sha256_hash[:16] }}…</td>
+                <td>{{ f.download_total or 0 }}</td>
+                <td class="actions">
+                    <a href="{{ url_for('download', file_id=f.id) }}" class="btn-sm">{{ icon('download', 14) }} Download</a>
+                    <a href="{{ url_for('share_file', file_id=f.id) }}" class="btn-sm">{{ icon('users', 14) }} Share</a>
+                    <form method="POST" action="{{ url_for('trash_file', file_id=f.id) }}" data-confirm="Move &quot;{{ f.original_filename }}&quot; to trash?" style="display:inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn-sm btn-danger">{{ icon('trash', 14) }} Trash</button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% set extra_args = {'q': q, 'sort': sort} %}
+{% include '_pagination.html' %}
+{% else %}
+<div class="empty-state">
+    <div class="empty-icon">{{ icon('folder', 34) }}</div>
+    {% if q %}
+        <p>No files match "{{ q }}".</p>
+    {% else %}
+        <p>You haven't uploaded any files yet.</p>
+        <a href="{{ url_for('upload') }}" class="btn btn-primary" style="margin-top:10px;">Upload one now</a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}
